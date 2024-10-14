@@ -21,7 +21,7 @@ def get_price(season):
         product_prices = {
             'Milk': 45,
             'Lettuce': 90,
-            'Eggs': 70,
+            'Eggs': 7,
             'Cheese': 350,
             'Chicken': 142,
             'Tomatoes': 90,
@@ -35,7 +35,7 @@ def get_price(season):
         product_prices = {
             'Milk': 42,
             'Lettuce': 80,
-            'Eggs': 60,
+            'Eggs': 6,
             'Cheese': 340,
             'Chicken': 138,
             'Tomatoes': 80,
