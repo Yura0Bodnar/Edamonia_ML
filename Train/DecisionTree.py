@@ -18,17 +18,18 @@ df['Day'] = df['Date'].dt.day
 label_encoder_product = LabelEncoder()
 df['Product_Label'] = label_encoder_product.fit_transform(df['Product'])
 
+df = df.drop(['Category'], axis=1)
 # Step 4: OneHot encode other categorical columns
 onehot_encoder = OneHotEncoder(drop='first', sparse_output=False)
-encoded_columns = onehot_encoder.fit_transform(df[['Day_of_Week', 'Season', 'Weather', 'Category']])
-encoded_column_names = onehot_encoder.get_feature_names_out(['Day_of_Week', 'Season', 'Weather', 'Category'])
+encoded_columns = onehot_encoder.fit_transform(df[['Day_of_Week', 'Season', 'Weather']])
+encoded_column_names = onehot_encoder.get_feature_names_out(['Day_of_Week', 'Season', 'Weather'])
 encoded_df = pd.DataFrame(encoded_columns, columns=encoded_column_names)
 
 # Step 5: Concatenate the original DataFrame with the encoded DataFrame
 df = pd.concat([df, encoded_df], axis=1)
 
 # Step 6: Drop the original categorical columns and 'Date'
-df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category'], axis=1)  # add event
+df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date'], axis=1)  # add event
 
 # Step 7: Split features and target
 X = df.drop(['Purchase_Quantity'], axis=1)  # Features
@@ -42,7 +43,7 @@ X_scaled = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
 # Step 10: Train a Decision Tree model
-tree_model = DecisionTreeRegressor(random_state=42, max_depth=5, min_samples_leaf=10)
+tree_model = DecisionTreeRegressor(random_state=42, max_depth=3)
 tree_model.fit(X_train, y_train)
 
 # Step 11: Make predictions and evaluate

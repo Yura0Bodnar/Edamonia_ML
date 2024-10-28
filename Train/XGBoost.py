@@ -30,14 +30,6 @@ df = pd.concat([df, encoded_df], axis=1)
 # Step 6: Drop the original categorical columns and 'Date'
 df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category'], axis=1)  # add event
 
-# Step 7: Add noise to selected numerical columns to improve model generalization
-noise_factor = 0.5  # Рівень шуму (коригуйте його, щоб вплинути на генералізацію)
-np.random.seed(42)
-df['Sales'] += noise_factor * np.random.normal(size=df['Sales'].shape)
-df['Stocks'] += noise_factor * np.random.normal(size=df['Stocks'].shape)
-df['Num_Customers'] += noise_factor * np.random.normal(size=df['Num_Customers'].shape)
-df['Purchase_Quantity'] += noise_factor * np.random.normal(size=df['Purchase_Quantity'].shape)
-
 # Step 7: Split features and target
 X = df.drop(['Purchase_Quantity'], axis=1)  # Features
 y = df['Purchase_Quantity']  # Target

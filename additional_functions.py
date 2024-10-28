@@ -3,7 +3,6 @@ import random
 from datetime import timedelta
 
 
-# Helper function to generate sequential dates with a small range between days
 # Helper function to generate sequential dates with a maximum gap of 7 days for each product
 def generate_sequential_date(previous_date, product_purchase_tracker, product, min_days=0, max_days=3):
     """
@@ -29,69 +28,98 @@ def generate_sequential_date(previous_date, product_purchase_tracker, product, m
 
 
 # Function to generate sequential dates with an emphasis on peak seasons
-def generate_date(previous_date, product, product_purchase_tracker, min_days=0, max_days=3, peak_seasons=None):
-    """
-    Generate the next purchase date for a product, ensuring it aligns with peak seasons and minimum weekly purchases.
-    """
-    # If peak seasons are not specified, treat all dates equally
-    if peak_seasons is None:
-        peak_seasons = ['Winter', 'Summer']  # Default peak seasons
+# def generate_date(previous_date, product, product_purchase_tracker, min_days=0, max_days=3, peak_seasons=None):
+#     """
+#     Generate the next purchase date for a product, ensuring it aligns with peak seasons and minimum weekly purchases.
+#     """
+#     # If peak seasons are not specified, treat all dates equally
+#     # if peak_seasons is None:
+#     #     peak_seasons = ['Winter', 'Summer']  # Default peak seasons
+#
+#     # Generate the next sequential date for the product
+#     new_date = generate_sequential_date(previous_date, product_purchase_tracker, product, min_days, max_days)
+#
+#     # Check if the new date is in a peak season
+#     # if determine_season(new_date) in peak_seasons:
+#     #     # Increase the likelihood of selecting dates within peak seasons
+#     #     if random.random() < 0.7:  # 70% chance to keep the date within a peak season
+#     #         return new_date
+#
+#     # Return the new date even if it's not in a peak season
+#     return new_date
 
-    # Generate the next sequential date for the product
-    new_date = generate_sequential_date(previous_date, product_purchase_tracker, product, min_days, max_days)
 
-    # Check if the new date is in a peak season
-    if determine_season(new_date) in peak_seasons:
-        # Increase the likelihood of selecting dates within peak seasons
-        if random.random() < 0.7:  # 70% chance to keep the date within a peak season
-            return new_date
+def get_price(season, product, year):
+    # Base prices in 2004
+    base_prices = {
+        'Milk': 4,
+        'Lettuce': 2,
+        'Eggs': 4,
+        'Cheese': 20,
+        'Chicken': 15,
+        'Tomatoes': 5,
+        'Apples': 2,
+        'Salmon': 16,
+        'Pork': 16,
+        'Potatoes': 1,
+    }
 
-    # Return the new date even if it's not in a peak season
-    return new_date
+    # Annual inflation rates
+    annual_inflation = [1.123, 1.103, 1.116, 1.166, 1.223, 1.123, 1.091, 1.046, 0.998, 1.005, 1.249,
+                        1.433, 1.124, 1.137, 1.098, 1.041, 1.05, 1.1, 1.266, 1.051, 1.065]  # Last element adjusted
 
+    # Calculate the cumulative inflation multiplier from 2004 to the specified year
+    inflation_multiplier = 1.0
+    for i in range(year - 2004):  # Limit to the number of years in annual_inflation
+        inflation_multiplier *= annual_inflation[i]
 
-def get_price(season, product):
+    # Adjust base prices for the current year
+    adjusted_price = base_prices.get(product, 0) * inflation_multiplier
+
+    # Seasonal adjustments
     if season == 'Summer':
-        product_prices = {
-            'Milk': 40,
-            'Lettuce': 70,
-            'Cheese': 330,
-            'Eggs': 50,
-            'Chicken': 130,
-            'Tomatoes': 75,
-            'Apples': 15,
-            'Salmon': 138,
-            'Pork': 160,
-            'Potatoes': 12,
+        seasonal_adjustment = {
+            'Milk': 1.2,
+            'Lettuce': 2.2,
+            'Eggs': 1.5,
+            'Cheese': 1.1,
+            'Chicken': 1.2,
+            'Tomatoes': 2.0,
+            'Apples': 1.5,
+            'Salmon': 2.0,
+            'Pork': 1.3,
+            'Potatoes': 1.2,
         }
     elif season == 'Winter':
-        product_prices = {
-            'Milk': 45,
-            'Lettuce': 90,
-            'Eggs': 70,
-            'Cheese': 350,
-            'Chicken': 142,
-            'Tomatoes': 90,
-            'Apples': 22,
-            'Salmon': 160,
-            'Pork': 190,
-            'Potatoes': 17,
+        seasonal_adjustment = {
+            'Milk': 1.3,
+            'Lettuce': 3.0,
+            'Eggs': 1.8,
+            'Cheese': 1.4,
+            'Chicken': 1.3,
+            'Tomatoes': 2.5,
+            'Apples': 2.2,
+            'Salmon': 2.3,
+            'Pork': 1.6,
+            'Potatoes': 1.4,
         }
     else:  # For Spring and Autumn
-        product_prices = {
-            'Milk': 42,
-            'Lettuce': 80,
-            'Eggs': 60,
-            'Cheese': 340,
-            'Chicken': 138,
-            'Tomatoes': 80,
-            'Apples': 17,
-            'Salmon': 145,
-            'Pork': 175,
-            'Potatoes': 15,
+        seasonal_adjustment = {
+            'Milk': 1.1,
+            'Lettuce': 1.6,
+            'Eggs': 1.3,
+            'Cheese': 1.2,
+            'Chicken': 1.1,
+            'Tomatoes': 1.6,
+            'Apples': 1.2,
+            'Salmon': 1.7,
+            'Pork': 1.4,
+            'Potatoes': 1.1,
         }
 
-    return product_prices.get(product, None)
+    # Apply seasonal adjustment
+    final_price = adjusted_price * seasonal_adjustment.get(product, 1.0)
+    return round(final_price, 2)
 
 
 # Dictionary to map products to their categories
@@ -143,15 +171,15 @@ def get_shelf_life(product):
 
 def get_stock(num_customers):
     if num_customers > 70:
-        stock_left = random.randint(0, 50)  # Large stock if few visitors
+        stock_left = random.randint(0, 30)  # Large stock if few visitors
         return stock_left
     else:
-        stock_left = random.randint(20, 150)  # Small stock if more visitors
+        stock_left = random.randint(20, 70)  # Small stock if more visitors
         return stock_left
 
 
 def get_average_check():
-    average_check_per_customer = random.uniform(200, 600)
+    average_check_per_customer = random.uniform(200, 1000)
     return average_check_per_customer
 
 
@@ -191,52 +219,61 @@ def determine_quantity(num_customers, stocks, season, product):
 
     # Increase quantity if many customers
     if num_customers > 300:
-        base_quantity += 20  # More customers, larger purchase
+        base_quantity += random.randint(5, 20)  # More customers, larger purchase
 
     # Increase quantity if low stock
     if stocks < 10:
-        base_quantity += 30  # Urgent need to restock
+        base_quantity += random.randint(5, 50)  # Urgent need to restock
 
     # Seasonal adjustments (e.g., more vegetables in summer)
-    if season == 'Summer' and product in ['Tomatoes', 'Lettuce']:
-        base_quantity += 15  # Summer demand for fresh produce
+    # if season == 'Summer' and product in ['Tomatoes', 'Lettuce']:
+    #     base_quantity += random.randint(0, 40)  # Summer demand for fresh produce
 
     # Adjust for product type (e.g., more demand for milk in winter)
-    if season == 'Winter' and product == 'Milk':
-        base_quantity += 10
+    # if season == 'Winter' and product == 'Milk':
+    #     base_quantity += 10
 
     return base_quantity
 
 
 # Function to generate number of customers based on various factors
-def generate_num_customers(season, weather, day_of_week):
-    base_customers = 250  # Base number of visitors in average conditions
+def generate_num_customers(start_date, end_date, season, weather):
+    """
+    Calculate the number of customers from start_date to end_date, considering
+    seasonal and weather conditions for each day.
+    """
+    total_customers = 0
 
-    # Adjust for season
-    if season == 'Summer':
-        base_customers += 50  # More visitors in summer
-    elif season == 'Winter':
-        base_customers -= 30  # Fewer visitors in winter
+    # Loop through each day between start_date and end_date to accumulate customers
+    current_date = start_date
+    while current_date < end_date:
+        base_customers = 250  # Base number of visitors in average conditions
 
-    # Adjust for weather
-    if weather == 'Sunny':
-        base_customers += 30  # More visitors in sunny weather
-    elif weather in ['Rainy', 'Snowy', 'Stormy']:
-        base_customers -= 40  # Fewer visitors in bad weather
+        # Adjust for season
+        if season == 'Summer':
+            base_customers += random.randint(10, 100)  # More visitors in summer
+        elif season == 'Winter':
+            base_customers -= random.randint(10, 50)  # Fewer visitors in winter
 
-    # Adjust for events
-    #if event != 'None':
-    #    base_customers += 100  # Significant increase if there's an event
+        # Adjust for weather
+        if weather == 'Sunny':
+            base_customers += random.randint(10, 50)  # More visitors in sunny weather
+        elif weather in ['Rainy', 'Snowy', 'Stormy']:
+            base_customers -= random.randint(10, 100)  # Fewer visitors in bad weather
 
-    # Adjust for day of the week (weekends typically attract more customers)
-    if day_of_week in ['Saturday', 'Sunday']:
-        base_customers += 50  # More visitors on weekends
+        # Adjust for weekends
+        day_of_week = current_date.weekday()
+        if day_of_week in [5, 6]:  # Saturday, Sunday
+            base_customers += random.randint(20, 100)
 
-    # Generate final number of customers with some randomness
-    num_customers = random.randint(base_customers - 50, base_customers + 50)
+        # Generate final number of customers for the day with some randomness
+        num_customers = random.randint(base_customers - 50, base_customers + 50)
 
-    # Ensure number of customers stays within realistic bounds
-    num_customers = max(50, min(500, num_customers))
+        # Ensure number of customers stays within realistic bounds
+        num_customers = max(50, min(800, num_customers))
+        total_customers += num_customers
 
-    return num_customers
+        # Move to the next day
+        current_date += timedelta(days=1)
 
+    return total_customers
