@@ -1,9 +1,56 @@
-from main import events
+# from main import events
 import random
 from datetime import timedelta
 
 
-def get_price(season):
+# Helper function to generate sequential dates with a small range between days
+# Helper function to generate sequential dates with a maximum gap of 7 days for each product
+def generate_sequential_date(previous_date, product_purchase_tracker, product, min_days=0, max_days=3):
+    """
+    Generate a sequential date for a product, ensuring that it is purchased at least once a week.
+    The function tracks the last purchase date for each product and ensures a purchase every 7 days.
+    """
+    last_purchase_date = product_purchase_tracker.get(product, previous_date)
+
+    # Add a random number of days between min_days and max_days to ensure purchases are spaced out
+    delta_days = random.randint(min_days, max_days)
+
+    # Calculate new purchase date
+    new_date = last_purchase_date + timedelta(days=delta_days)
+
+    # Ensure the new date is not more than 4 days from the last purchase
+    if (new_date - last_purchase_date).days > 4:
+        new_date = last_purchase_date + timedelta(days=4)
+
+    # Update the tracker with the new purchase date for the product
+    product_purchase_tracker[product] = new_date
+
+    return new_date
+
+
+# Function to generate sequential dates with an emphasis on peak seasons
+def generate_date(previous_date, product, product_purchase_tracker, min_days=0, max_days=3, peak_seasons=None):
+    """
+    Generate the next purchase date for a product, ensuring it aligns with peak seasons and minimum weekly purchases.
+    """
+    # If peak seasons are not specified, treat all dates equally
+    if peak_seasons is None:
+        peak_seasons = ['Winter', 'Summer']  # Default peak seasons
+
+    # Generate the next sequential date for the product
+    new_date = generate_sequential_date(previous_date, product_purchase_tracker, product, min_days, max_days)
+
+    # Check if the new date is in a peak season
+    if determine_season(new_date) in peak_seasons:
+        # Increase the likelihood of selecting dates within peak seasons
+        if random.random() < 0.7:  # 70% chance to keep the date within a peak season
+            return new_date
+
+    # Return the new date even if it's not in a peak season
+    return new_date
+
+
+def get_price(season, product):
     if season == 'Summer':
         product_prices = {
             'Milk': 40,
@@ -17,7 +64,6 @@ def get_price(season):
             'Pork': 160,
             'Potatoes': 12,
         }
-        return product_prices
     elif season == 'Winter':
         product_prices = {
             'Milk': 45,
@@ -31,8 +77,7 @@ def get_price(season):
             'Pork': 190,
             'Potatoes': 17,
         }
-        return product_prices
-    else:
+    else:  # For Spring and Autumn
         product_prices = {
             'Milk': 42,
             'Lettuce': 80,
@@ -45,7 +90,8 @@ def get_price(season):
             'Pork': 175,
             'Potatoes': 15,
         }
-        return product_prices
+
+    return product_prices.get(product, None)
 
 
 # Dictionary to map products to their categories
@@ -69,10 +115,10 @@ shelf_life_dict = {
     'Chicken': 5,    # chicken can be stored for up to 5 days
     'Tomatoes': 10,  # tomatoes last about 10 days
     'Apples': 30,    # apples can last for a month
-    'Fish': 3,       # fresh fish lasts about 3 days
+    'Salmon': 3,       # fresh fish lasts about 3 days
     'Cheese': 90,    # hard cheese can last about 90 days
     'Lettuce': 5,    # lettuce lasts around 5 days
-    'Beef': 7,       # beef can last up to a week
+    'Pork': 7,       # beef can last up to a week
     'Potatoes': 90   # potatoes can be stored for several months
 }
 
@@ -87,20 +133,20 @@ def get_shelf_life(product):
 
 
 # Weights: 40% for 'None', 60% distributed across other events
-event_weights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12]
+# event_weights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12]
 
 
 # Choose an event based on the specified probabilities
-def get_event():
-    return random.choices(events, weights=event_weights, k=1)[0]
+# def get_event():
+#     return random.choices(events, weights=event_weights, k=1)[0]
 
 
 def get_stock(num_customers):
     if num_customers > 70:
-        stock_left = random.randint(20, 50)  # Large stock if few visitors
+        stock_left = random.randint(0, 50)  # Large stock if few visitors
         return stock_left
     else:
-        stock_left = random.randint(0, 20)  # Small stock if more visitors
+        stock_left = random.randint(20, 150)  # Small stock if more visitors
         return stock_left
 
 
@@ -163,7 +209,7 @@ def determine_quantity(num_customers, stocks, season, product):
 
 
 # Function to generate number of customers based on various factors
-def generate_num_customers(season, weather, event, day_of_week):
+def generate_num_customers(season, weather, day_of_week):
     base_customers = 250  # Base number of visitors in average conditions
 
     # Adjust for season
@@ -179,8 +225,8 @@ def generate_num_customers(season, weather, event, day_of_week):
         base_customers -= 40  # Fewer visitors in bad weather
 
     # Adjust for events
-    if event != 'None':
-        base_customers += 100  # Significant increase if there's an event
+    #if event != 'None':
+    #    base_customers += 100  # Significant increase if there's an event
 
     # Adjust for day of the week (weekends typically attract more customers)
     if day_of_week in ['Saturday', 'Sunday']:

@@ -6,7 +6,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 
 # Step 1: Load the dataset
-df = pd.read_csv('synthetic_purchase_data.csv')
+df = pd.read_csv('../synthetic_purchase_data.csv')
 
 # Step 2: Convert 'Date' into separate Year, Month, Day columns
 df['Date'] = pd.to_datetime(df['Date'])
@@ -20,15 +20,23 @@ df['Product_Label'] = label_encoder_product.fit_transform(df['Product'])
 
 # Step 4: OneHot encode other categorical columns
 onehot_encoder = OneHotEncoder(drop='first', sparse_output=False)
-encoded_columns = onehot_encoder.fit_transform(df[['Day_of_Week', 'Season', 'Weather', 'Event', 'Category']])
-encoded_column_names = onehot_encoder.get_feature_names_out(['Day_of_Week', 'Season', 'Weather', 'Event', 'Category'])
+encoded_columns = onehot_encoder.fit_transform(df[['Day_of_Week', 'Season', 'Weather', 'Category']])
+encoded_column_names = onehot_encoder.get_feature_names_out(['Day_of_Week', 'Season', 'Weather', 'Category'])
 encoded_df = pd.DataFrame(encoded_columns, columns=encoded_column_names)
 
 # Step 5: Concatenate the original DataFrame with the encoded DataFrame
 df = pd.concat([df, encoded_df], axis=1)
 
 # Step 6: Drop the original categorical columns and 'Date'
-df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Event', 'Product', 'Date', 'Category'], axis=1)
+df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category'], axis=1)  # add event
+
+# Step 7: Add noise to selected numerical columns to improve model generalization
+noise_factor = 0.5  # Рівень шуму (коригуйте його, щоб вплинути на генералізацію)
+np.random.seed(42)
+df['Sales'] += noise_factor * np.random.normal(size=df['Sales'].shape)
+df['Stocks'] += noise_factor * np.random.normal(size=df['Stocks'].shape)
+df['Num_Customers'] += noise_factor * np.random.normal(size=df['Num_Customers'].shape)
+df['Purchase_Quantity'] += noise_factor * np.random.normal(size=df['Purchase_Quantity'].shape)
 
 # Step 7: Split features and target
 X = df.drop(['Purchase_Quantity'], axis=1)  # Features
