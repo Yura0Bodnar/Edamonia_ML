@@ -167,7 +167,7 @@ def determine_quantity(num_customers, stocks, season, product):
 
 
 # Function to generate number of customers based on various factors
-def generate_num_customers(season, weather, event, day_of_week):
+def generate_num_customers(season, weather, day_of_week):
     base_customers = 250  # Base number of visitors in average conditions
 
     # Adjust for season
@@ -183,8 +183,8 @@ def generate_num_customers(season, weather, event, day_of_week):
         base_customers -= 40  # Fewer visitors in bad weather
 
     # Adjust for events
-    if event != 'None':
-        base_customers += 100  # Significant increase if there's an event
+    #if event != 'None':
+    #    base_customers += 100  # Significant increase if there's an event
 
     # Adjust for day of the week (weekends typically attract more customers)
     if day_of_week in ['Saturday', 'Sunday']:
@@ -277,9 +277,9 @@ def generate_synthetic_data(n_rows):
         season = determine_season(current_date)
         weather = random.choice(seasonal_weather[season])
         product = random.choice(products)
-        event = get_event()
+        #event = get_event()
         day_of_week = days_of_week[current_date.weekday()]
-        num_customers = generate_num_customers(season, weather, event, day_of_week)
+        num_customers = generate_num_customers(season, weather, day_of_week)  # add 'event'
         stocks = get_stock(num_customers)
         days_until_next_purchase = next_purchase(stocks, product)
         category = get_category(product)
@@ -290,11 +290,11 @@ def generate_synthetic_data(n_rows):
 
         # Append row data
         data.append([current_date, day_of_week, season, weather, product, category, unit_price,
-                     num_customers, sales, stocks, shelf_life, days_until_next_purchase,  event, quantity])
+                     num_customers, sales, stocks, shelf_life, days_until_next_purchase, quantity]) # add event
 
     # Create DataFrame
     columns = ['Date', 'Day_of_Week', 'Season', 'Weather', 'Product', 'Category', 'Unit_Price',
-               'Num_Customers', 'Sales', 'Stocks', 'Shelf_Life', 'Days_Until_Next_Purchase', 'Event', 'Purchase_Quantity']
+               'Num_Customers', 'Sales', 'Stocks', 'Shelf_Life', 'Days_Until_Next_Purchase', 'Purchase_Quantity'] # add event
 
     df = pd.DataFrame(data, columns=columns)
     return df
