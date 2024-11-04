@@ -27,28 +27,6 @@ def generate_sequential_date(previous_date, product_purchase_tracker, product, m
     return new_date
 
 
-# Function to generate sequential dates with an emphasis on peak seasons
-# def generate_date(previous_date, product, product_purchase_tracker, min_days=0, max_days=3, peak_seasons=None):
-#     """
-#     Generate the next purchase date for a product, ensuring it aligns with peak seasons and minimum weekly purchases.
-#     """
-#     # If peak seasons are not specified, treat all dates equally
-#     # if peak_seasons is None:
-#     #     peak_seasons = ['Winter', 'Summer']  # Default peak seasons
-#
-#     # Generate the next sequential date for the product
-#     new_date = generate_sequential_date(previous_date, product_purchase_tracker, product, min_days, max_days)
-#
-#     # Check if the new date is in a peak season
-#     # if determine_season(new_date) in peak_seasons:
-#     #     # Increase the likelihood of selecting dates within peak seasons
-#     #     if random.random() < 0.7:  # 70% chance to keep the date within a peak season
-#     #         return new_date
-#
-#     # Return the new date even if it's not in a peak season
-#     return new_date
-
-
 def get_price(season, product, year):
     # Base prices in 2004
     base_prices = {
@@ -170,7 +148,7 @@ def get_shelf_life(product):
 
 
 def get_stock(num_customers):
-    if num_customers > 70:
+    if num_customers > 600:
         stock_left = random.randint(0, 30)  # Large stock if few visitors
         return stock_left
     else:
@@ -178,9 +156,11 @@ def get_stock(num_customers):
         return stock_left
 
 
-def get_average_check():
-    average_check_per_customer = random.uniform(200, 1000)
-    return average_check_per_customer
+def get_average_check(num_customers):
+    checks = []
+    for _ in range(num_customers):
+        checks.append(random.uniform(200, 1000))
+    return sum(checks)
 
 
 def determine_season(date):
@@ -211,29 +191,6 @@ def next_purchase(stock_left, product):
     else:
         days_until_next_purchase = get_shelf_life(product)  # Otherwise, use shelf life
         return days_until_next_purchase
-
-
-# New logic to determine purchase quantity
-def determine_quantity(num_customers, stocks, season, product):
-    base_quantity = 50  # Base quantity for all products
-
-    # Increase quantity if many customers
-    if num_customers > 300:
-        base_quantity += random.randint(5, 20)  # More customers, larger purchase
-
-    # Increase quantity if low stock
-    if stocks < 10:
-        base_quantity += random.randint(5, 50)  # Urgent need to restock
-
-    # Seasonal adjustments (e.g., more vegetables in summer)
-    # if season == 'Summer' and product in ['Tomatoes', 'Lettuce']:
-    #     base_quantity += random.randint(0, 40)  # Summer demand for fresh produce
-
-    # Adjust for product type (e.g., more demand for milk in winter)
-    # if season == 'Winter' and product == 'Milk':
-    #     base_quantity += 10
-
-    return base_quantity
 
 
 # Function to generate number of customers based on various factors
@@ -277,3 +234,43 @@ def generate_num_customers(start_date, end_date, season, weather):
         current_date += timedelta(days=1)
 
     return total_customers
+
+
+# New logic to determine purchase quantity
+def determine_quantity(num_customers, stocks, season, product):
+    base_quantity = 50  # Base quantity for all products
+
+    # Increase quantity if many customers
+    if num_customers > 300:
+        base_quantity += random.randint(5, 10)  # More customers, larger purchase
+
+    # Increase quantity if low stock
+    if stocks < 10:
+        base_quantity += 10  # Urgent need to restock
+
+    # Seasonal adjustments
+    if season == 'Summer':
+        if product in ['Tomatoes', 'Lettuce', 'Apples', 'Chicken']:
+            base_quantity += 5  # High demand for fresh produce
+        elif product == 'Chicken':
+            base_quantity += 10
+
+    elif season == 'Winter':
+        if product in ['Milk', 'Cheese', 'Pork', 'Potatoes']:
+            base_quantity += 5  # Comfort foods and warming dishes
+        elif product == 'Potatoes':
+            base_quantity += 10
+
+    elif season == 'Spring':
+        if product in ['Lettuce', 'Tomatoes', 'Eggs', 'Salmon']:
+            base_quantity += 5  # Demand for light, fresh foods
+        elif product == 'Salmon':
+            base_quantity += 10
+
+    elif season == 'Autumn':
+        if product in ['Apples', 'Pork', 'Potatoes', 'Chicken']:
+            base_quantity += 5  # Seasonal fruits and hearty foods
+        elif product == 'Chicken':
+            base_quantity += 10
+
+    return base_quantity

@@ -6,7 +6,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 
 # Step 1: Load the dataset
-df = pd.read_csv('../synthetic_purchase_data.csv')
+df = pd.read_csv('../../Dataset/synthetic_data.csv')
 
 # Step 2: Convert 'Date' into separate Year, Month, Day columns
 df['Date'] = pd.to_datetime(df['Date'])
@@ -38,23 +38,40 @@ y = df['Purchase_Quantity']  # Target
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# Step 9: Split the dataset into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+# Step 9: Split the dataset into training, validation, and testing sets
+X_train, X_temp, y_train, y_temp = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
 # Step 10: Train an XGBoost model
 xgb_model = XGBRegressor(objective='reg:squarederror', random_state=42)
 xgb_model.fit(X_train, y_train)
 
-# Step 11: Make predictions and evaluate
-y_pred = xgb_model.predict(X_test)
-# Step 12: Calculate evaluation metrics
-mse = mean_squared_error(y_test, y_pred)
-rmse = np.sqrt(mse)  # Root Mean Squared Error
-mae = mean_absolute_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)  # R-squared
+# Step 11: Make predictions and evaluate on the validation set
+y_val_pred = xgb_model.predict(X_val)
 
-# Print evaluation metrics
-print(f"Mean Squared Error (MSE): {mse}")
-print(f"Root Mean Squared Error (RMSE): {rmse}")
-print(f"Mean Absolute Error (MAE): {mae}")
-print(f"R-squared (R²): {r2}")
+# Step 12: Calculate evaluation metrics for the validation set
+val_mse = mean_squared_error(y_val, y_val_pred)
+val_rmse = np.sqrt(val_mse)  # Root Mean Squared Error
+val_mae = mean_absolute_error(y_val, y_val_pred)
+val_r2 = r2_score(y_val, y_val_pred)  # R-squared
+
+print("Validation Set Metrics:")
+print(f"Mean Squared Error (MSE): {val_mse}")
+print(f"Root Mean Squared Error (RMSE): {val_rmse}")
+print(f"Mean Absolute Error (MAE): {val_mae}")
+print(f"R-squared (R²): {val_r2}")
+
+# Step 13: Make predictions and evaluate on the test set
+y_test_pred = xgb_model.predict(X_test)
+
+# Step 14: Calculate evaluation metrics for the test set
+test_mse = mean_squared_error(y_test, y_test_pred)
+test_rmse = np.sqrt(test_mse)  # Root Mean Squared Error
+test_mae = mean_absolute_error(y_test, y_test_pred)
+test_r2 = r2_score(y_test, y_test_pred)  # R-squared
+
+print("\nTest Set Metrics:")
+print(f"Mean Squared Error (MSE): {test_mse}")
+print(f"Root Mean Squared Error (RMSE): {test_rmse}")
+print(f"Mean Absolute Error (MAE): {test_mae}")
+print(f"R-squared (R²): {test_r2}")
