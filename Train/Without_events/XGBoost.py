@@ -1,9 +1,10 @@
+from sklearn.model_selection import GridSearchCV, cross_val_score
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
-from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from xgboost import XGBRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
 import numpy as np
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
+from xgboost import XGBRegressor
+from sklearn.model_selection import train_test_split, KFold
 
 # Step 1: Load the dataset
 df = pd.read_csv('../../Dataset/synthetic_data.csv')
@@ -38,41 +39,55 @@ y = df['Purchase_Quantity']  # Target
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# Step 9: Set up cross-validation
-kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 5-fold cross-validation
-
-# Define the model
-xgb_model = XGBRegressor(objective='reg:squarederror', random_state=42)
-
-# Define scoring metrics for cross-validation
-scoring = {
-    'MSE': make_scorer(mean_squared_error),
-    'MAE': make_scorer(mean_absolute_error),
-    'R2': make_scorer(r2_score)
+# Step 9: Define parameter grid for GridSearchCV
+param_grid = {
+    'n_estimators': [50, 60, 100],         # Кількість дерев
+    'learning_rate': [0.1, 0.15, 0.2],      # Темп навчання
+    'max_depth': [7, 8, 9]                  # Глибина дерева
 }
 
-# Perform cross-validation
-cv_results = {}
-for metric, scorer in scoring.items():
-    scores = cross_val_score(xgb_model, X_scaled, y, cv=kf, scoring=scorer)
-    cv_results[metric] = scores
-    print(f"{metric} (5-Fold Cross-Validation): {scores.mean():.4f} ± {scores.std():.4f}")
+# Step 10: Set up cross-validation and GridSearchCV
+kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 5-fold cross-validation
+xgb_model = XGBRegressor(objective='reg:squarederror', random_state=42)
+grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, scoring='neg_mean_squared_error', cv=kf, n_jobs=-1, verbose=1)
 
-# After cross-validation, train the model on the entire training set for final evaluation on a test set
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
-xgb_model.fit(X_train, y_train)
+# Step 11: Fit the GridSearchCV
+grid_search.fit(X_scaled, y)
 
-# Make predictions and evaluate on the test set
-y_test_pred = xgb_model.predict(X_test)
+# Convert results to DataFrame and sort by mean_test_score
+results_df = pd.DataFrame(grid_search.cv_results_)
+results_df['mean_test_score'] = -results_df['mean_test_score']  # Convert MSE to positive for easier interpretation
+sorted_results = results_df.sort_values(by='mean_test_score').reset_index(drop=True)
 
-# Calculate evaluation metrics for the test set
-test_mse = mean_squared_error(y_test, y_test_pred)
-test_rmse = np.sqrt(test_mse)  # Root Mean Squared Error
-test_mae = mean_absolute_error(y_test, y_test_pred)
-test_r2 = r2_score(y_test, y_test_pred)  # R-squared
+# Select rows for table: Base model, Intermediate models, Best model, Slightly worse than best
+selected_rows = sorted_results.iloc[[0, len(sorted_results) // 4, len(sorted_results) // 2, sorted_results['mean_test_score'].idxmin(), len(sorted_results) - 1]]
 
-print("\nTest Set Metrics:")
-print(f"Mean Squared Error (MSE): {test_mse}")
-print(f"Root Mean Squared Error (RMSE): {test_rmse}")
-print(f"Mean Absolute Error (MAE): {test_mae}")
-print(f"R-squared (R²): {test_r2}")
+# Create table for the article
+table = selected_rows[['param_n_estimators', 'param_learning_rate', 'param_max_depth', 'mean_test_score', 'std_test_score']]
+table.columns = ['Кількість дерев', 'Темп навчання', 'Глибина дерева', 'Середнє MSE (крос-валідація)', 'Стандартне відхилення MSE']
+
+# Compute R^2 for each selected model
+r2_scores = []
+for _, row in selected_rows.iterrows():
+    model = XGBRegressor(
+        n_estimators=row['param_n_estimators'],
+        learning_rate=row['param_learning_rate'],
+        max_depth=row['param_max_depth'],
+        objective='reg:squarederror',
+        random_state=42
+    )
+    r2 = cross_val_score(model, X_scaled, y, cv=kf, scoring=make_scorer(r2_score)).mean()
+    r2_scores.append(r2)
+
+table = selected_rows[['param_n_estimators', 'param_learning_rate', 'param_max_depth', 'mean_test_score', 'std_test_score']].copy()
+table.columns = ['Кількість дерев', 'Темп навчання', 'Глибина дерева', 'Середнє MSE (крос-валідація)', 'Стандартне відхилення MSE']
+
+# Add R² column to the table
+table['R² (крос-валідація)'] = r2_scores
+
+# Display table for the article
+print("\nТаблиця результатів:")
+print(table)
+
+# Зберегти таблицю результатів у файл CSV
+table.to_csv('results_table.csv', index=False, encoding='utf-8-sig')
