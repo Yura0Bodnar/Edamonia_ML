@@ -7,7 +7,7 @@ from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split, KFold
 
 # Step 1: Load the dataset
-df = pd.read_csv('../../Dataset/synthetic_data.csv')
+df = pd.read_csv('../../Dataset/data_with_events.csv')
 
 # Step 2: Convert 'Date' into separate Year, Month, Day columns
 df['Date'] = pd.to_datetime(df['Date'])
@@ -29,7 +29,44 @@ encoded_df = pd.DataFrame(encoded_columns, columns=encoded_column_names)
 df = pd.concat([df, encoded_df], axis=1)
 
 # Step 6: Drop the original categorical columns and 'Date'
-df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category', 'Event'], axis=1)
+df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category'], axis=1)
+
+# Step 1: Combine Rare Categories
+def group_events(event):
+    holidays = [
+        "New Year", "Women's Day", "Men's Day", "Independence Day of Ukraine",
+        "Constitution Day of Ukraine", "Day of Defenders of Ukraine",
+        "Valentine's Day", "Teacher's Day", "Day of Lviv city",
+        "Day of Dignity and Freedom", "Day of Ukrainian Language",
+        "The Nativity of Christ", "Saint Nicholas Day", "Easter"
+    ]
+    promotions = ["Holiday Special", "Special Promotion", "Seasonal Event"]
+    occasions = ["Birthdays", "Corporate Event"]
+
+    if event in holidays:
+        return "Holiday"
+    elif event in promotions:
+        return "Promotion"
+    elif event in occasions:
+        return "Occasion"
+    elif event == "None":
+        return "None"
+    else:
+        return "Other"
+
+
+df['Event_Grouped'] = df['Event'].apply(group_events)
+# Step 2: OneHotEncode the Grouped Column
+onehot_encoder_event = OneHotEncoder(drop='first', sparse_output=False)
+event_encoded_columns = onehot_encoder_event.fit_transform(df[['Event_Grouped']])
+event_encoded_column_names = onehot_encoder_event.get_feature_names_out(['Event_Grouped'])
+event_encoded_df = pd.DataFrame(event_encoded_columns, columns=event_encoded_column_names)
+
+# Step 3: Concatenate the Encoded Data
+df = pd.concat([df, event_encoded_df], axis=1)
+
+# Step 4: Drop the Original 'Event' and Grouped Column
+df = df.drop(['Event', 'Event_Grouped'], axis=1)
 
 # Step 7: Split features and target
 X = df.drop(['Purchase_Quantity'], axis=1)  # Features

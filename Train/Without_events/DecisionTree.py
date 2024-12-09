@@ -29,7 +29,7 @@ encoded_df = pd.DataFrame(encoded_columns, columns=encoded_column_names)
 df = pd.concat([df, encoded_df], axis=1)
 
 # Step 6: Drop the original categorical columns and 'Date'
-df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date'], axis=1)  # add event
+df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Event'], axis=1)  # add event
 
 # Step 7: Split features and target
 X = df.drop(['Purchase_Quantity'], axis=1)  # Features

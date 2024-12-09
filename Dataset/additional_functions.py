@@ -1,9 +1,27 @@
-# from main import events
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta
+
+events = ['None', 'Holiday Special', 'Birthdays', 'Corporate Event', 'Special Promotion', 'Seasonal Event']
+
+# Список свят (без року)
+holidays = [
+    ("New Year", 1, 1),
+    ("Women's Day", 3, 8),
+    ("Men's Day", 11, 14),
+    ("Independence Day of Ukraine", 8, 24),
+    ("Constitution Day of Ukraine", 6, 28),
+    ("Day of Defenders of Ukraine", 10, 14),
+    ("Valentine's Day", 2, 14),
+    ("Teacher's Day", 10, 5),
+    ("Day of Lviv city", 4, 27),
+    ("Day of Dignity and Freedom", 11, 21),
+    ("Day of Ukrainian Language", 11, 9),
+    ("The Nativity of Christ", 12, 25),
+    ("Saint Nicholas Day", 12, 6),
+    ("Easter", 4, 16),  # Дату Великодня потрібно розраховувати кожного року
+]
 
 
-# Helper function to generate sequential dates with a maximum gap of 7 days for each product
 def generate_sequential_date(previous_date, product_purchase_tracker, product, min_days=0, max_days=3):
     """
     Generate a sequential date for a product, ensuring that it is purchased at least once a week.
@@ -25,6 +43,46 @@ def generate_sequential_date(previous_date, product_purchase_tracker, product, m
     product_purchase_tracker[product] = new_date
 
     return new_date
+
+
+def generate_date_with_event(previous_date, product_purchase_tracker, product, min_days=0, max_days=3):
+    """
+    Генерує послідовну дату для продукту, враховуючи святкові дати.
+    Закупівля відбувається за день до свята.
+    """
+    last_purchase_date = product_purchase_tracker.get(product, previous_date)
+
+    # Генерація випадкової кількості днів між мінімумом та максимумом
+    delta_days = random.randint(min_days, max_days)
+
+    # Обчислення нової дати покупки
+    new_date = last_purchase_date + timedelta(days=delta_days)
+
+    # Отримання святкових дат для поточного року
+    holiday_dates = [
+        (datetime(new_date.year, month, day), name) for name, month, day in holidays
+    ]
+
+    # Якщо згенерована дата є днем перед святом, то вибираємо святкову дату
+    holiday_name = None
+    for holiday_date, name in holiday_dates:
+        # Перевірка, чи є згенерована дата на день перед святом
+        # Особливий випадок для свят, які випадають на 1 січня
+        if holiday_date.month == 1 and holiday_date.day == 1:
+            # Якщо свято 1 січня, то перевіряємо, чи дата - 31 грудня попереднього року
+            if new_date.month == 12 and new_date.day == 31:
+                holiday_name = name
+                break
+        elif new_date.month == holiday_date.month and new_date.day == holiday_date.day - 1:
+            holiday_name = name
+            break
+
+    product_purchase_tracker[product] = new_date
+
+    if holiday_name:
+        return new_date, holiday_name
+    else:
+        return new_date, None
 
 
 def get_price(season, product, year):
@@ -139,17 +197,17 @@ def get_shelf_life(product):
 
 
 # Weights: 40% for 'None', 60% distributed across other events
-# event_weights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12]
+event_weights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12]
 
 
 # Choose an event based on the specified probabilities
-# def get_event():
-#     return random.choices(events, weights=event_weights, k=1)[0]
+def get_event():
+    return random.choices(events, weights=event_weights, k=1)[0]
 
 
-def get_stock(num_customers):
-    if num_customers > 600:
-        stock_left = random.randint(0, 30)  # Large stock if few visitors
+def get_stock(num_customers, event):
+    if num_customers > 600 or event is not None:
+        stock_left = random.randint(1, 30)  # Large stock if few visitors
         return stock_left
     else:
         stock_left = random.randint(20, 70)  # Small stock if more visitors
@@ -194,16 +252,14 @@ def next_purchase(stock_left, product):
 
 
 # Function to generate number of customers based on various factors
-def generate_num_customers(start_date, end_date, season, weather):
+def generate_num_customers(current_date, season, weather):
     """
     Calculate the number of customers from start_date to end_date, considering
     seasonal and weather conditions for each day.
     """
     total_customers = 0
 
-    # Loop through each day between start_date and end_date to accumulate customers
-    current_date = start_date
-    while current_date < end_date:
+    for _ in range(30):
         base_customers = 250  # Base number of visitors in average conditions
 
         # Adjust for season
@@ -220,7 +276,7 @@ def generate_num_customers(start_date, end_date, season, weather):
 
         # Adjust for weekends
         day_of_week = current_date.weekday()
-        if day_of_week in [5, 6]:  # Saturday, Sunday
+        if day_of_week in [4, 5, 6]:  # Friday, Saturday, Sunday
             base_customers += random.randint(20, 100)
 
         # Generate final number of customers for the day with some randomness
@@ -236,13 +292,58 @@ def generate_num_customers(start_date, end_date, season, weather):
     return total_customers
 
 
+def num_customers_events(current_date, season, weather):
+    """
+    Calculate the number of customers from start_date to end_date, considering
+    seasonal and weather conditions for each day.
+    """
+    total_customers = 0
+
+    for i in range(30):
+        base_customers = 250  # Base number of visitors in average conditions
+
+        # Adjust for season
+        if season == 'Summer':
+            base_customers += random.randint(10, 100)  # More visitors in summer
+        elif season == 'Winter':
+            base_customers -= random.randint(10, 50)  # Fewer visitors in winter
+
+        # Adjust for weather
+        if weather == 'Sunny':
+            base_customers += random.randint(10, 50)  # More visitors in sunny weather
+        elif weather in ['Rainy', 'Snowy', 'Stormy']:
+            base_customers -= random.randint(10, 100)  # Fewer visitors in bad weather
+
+        # Adjust for weekends
+        day_of_week = current_date.weekday()
+        if day_of_week in [4, 5, 6]:  # Friday, Saturday, Sunday
+            base_customers += random.randint(20, 100)
+
+        event = i % 2
+
+        if event == 1:
+            base_customers += random.randint(5, 30)
+
+        # Generate final number of customers for the day with some randomness
+        num_customers = random.randint(base_customers - 50, base_customers + 50)
+
+        # Ensure number of customers stays within realistic bounds
+        num_customers = max(50, min(800, num_customers))
+        total_customers += num_customers
+
+        # Move to the next day
+        current_date += timedelta(days=1)
+
+    return total_customers
+
+
 # New logic to determine purchase quantity
-def determine_quantity(num_customers, stocks, season, product):
+def determine_quantity(num_customers, stocks, season, product, event):
     base_quantity = 50  # Base quantity for all products
 
     # Increase quantity if many customers
-    if num_customers > 300:
-        base_quantity += random.randint(5, 10)  # More customers, larger purchase
+    if num_customers > 6000:
+        base_quantity += random.randint(10, 15)  # More customers, larger purchase
 
     # Increase quantity if low stock
     if stocks < 10:
@@ -272,5 +373,8 @@ def determine_quantity(num_customers, stocks, season, product):
             base_quantity += 5  # Seasonal fruits and hearty foods
         elif product == 'Chicken':
             base_quantity += 10
+
+    if event is not None:
+        base_quantity += 10
 
     return base_quantity
