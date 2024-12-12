@@ -63,17 +63,13 @@ def generate_date_with_event(previous_date, product_purchase_tracker, product, m
         (datetime(new_date.year, month, day), name) for name, month, day in holidays
     ]
 
-    # Якщо згенерована дата є днем перед святом, то вибираємо святкову дату
     holiday_name = None
     for holiday_date, name in holiday_dates:
-        # Перевірка, чи є згенерована дата на день перед святом
-        # Особливий випадок для свят, які випадають на 1 січня
-        if holiday_date.month == 1 and holiday_date.day == 1:
-            # Якщо свято 1 січня, то перевіряємо, чи дата - 31 грудня попереднього року
-            if new_date.month == 12 and new_date.day == 31:
-                holiday_name = name
-                break
-        elif new_date.month == holiday_date.month and new_date.day == holiday_date.day - 1:
+        if new_date <= holiday_date <= new_date + timedelta(days=max_days):
+            if holiday_date.month == 1 and holiday_date.day == 1:
+                new_date = datetime(holiday_date.year - 1, 12, 31)
+            else:
+                new_date = holiday_date - timedelta(days=1)
             holiday_name = name
             break
 

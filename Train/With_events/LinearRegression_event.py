@@ -2,12 +2,13 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
 import numpy as np
-from Train.preprocess_data import preprocess_data
+from Train.preprocess_data import preprocess_data_event
+import pandas as pd
 
 # Step 1: Load the dataset
 file_path = '../../Dataset/data_with_events.csv'
 
-X_scaled, y, kf = preprocess_data(file_path)
+X_scaled, y, kf = preprocess_data_event(file_path)
 
 # Step 2: Define the Linear Regression model
 lin_reg_model = LinearRegression()

@@ -1,13 +1,14 @@
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import  GridSearchCV, cross_val_score
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
-import numpy as np
-from Train.preprocess_data import preprocess_data
+from sklearn.metrics import r2_score, make_scorer
+import pandas as pd
+from Train.preprocess_data import preprocess_data_event
 
 # Step 1: Load the dataset
 file_path = '../../Dataset/data_with_events.csv'
 
-X_scaled, y, kf = preprocess_data(file_path)
+# Попередня обробка даних
+X_scaled, y, kf = preprocess_data_event(file_path)
 
 # Step 2: Define parameter grid for GridSearchCV
 param_grid = {

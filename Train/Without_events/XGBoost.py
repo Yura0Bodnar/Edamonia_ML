@@ -1,43 +1,13 @@
 from sklearn.model_selection import GridSearchCV, cross_val_score
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
+from sklearn.metrics import r2_score, make_scorer
 from xgboost import XGBRegressor
-from sklearn.model_selection import train_test_split, KFold
+from Train.preprocess_data import preprocess_data
 
 # Step 1: Load the dataset
-df = pd.read_csv('../../Dataset/synthetic_data.csv')
+file_path = '../../Dataset/data_with_events.csv'
 
-# Step 2: Convert 'Date' into separate Year, Month, Day columns
-df['Date'] = pd.to_datetime(df['Date'])
-df['Year'] = df['Date'].dt.year
-df['Month'] = df['Date'].dt.month
-df['Day'] = df['Date'].dt.day
-
-# Step 3: Label encode 'Product'
-label_encoder_product = LabelEncoder()
-df['Product_Label'] = label_encoder_product.fit_transform(df['Product'])
-
-# Step 4: OneHot encode other categorical columns
-onehot_encoder = OneHotEncoder(drop='first', sparse_output=False)
-encoded_columns = onehot_encoder.fit_transform(df[['Day_of_Week', 'Season', 'Weather', 'Category']])
-encoded_column_names = onehot_encoder.get_feature_names_out(['Day_of_Week', 'Season', 'Weather', 'Category'])
-encoded_df = pd.DataFrame(encoded_columns, columns=encoded_column_names)
-
-# Step 5: Concatenate the original DataFrame with the encoded DataFrame
-df = pd.concat([df, encoded_df], axis=1)
-
-# Step 6: Drop the original categorical columns and 'Date'
-df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category', 'Event'], axis=1)
-
-# Step 7: Split features and target
-X = df.drop(['Purchase_Quantity'], axis=1)  # Features
-y = df['Purchase_Quantity']  # Target
-
-# Step 8: Standardize the numerical features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_scaled, y, kf = preprocess_data(file_path)
 
 # Step 9: Define parameter grid for GridSearchCV
 param_grid = {
@@ -46,8 +16,6 @@ param_grid = {
     'max_depth': [7, 8, 9]                  # Глибина дерева
 }
 
-# Step 10: Set up cross-validation and GridSearchCV
-kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 5-fold cross-validation
 xgb_model = XGBRegressor(objective='reg:squarederror', random_state=42)
 grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, scoring='neg_mean_squared_error', cv=kf, n_jobs=-1, verbose=1)
 
@@ -90,4 +58,4 @@ print("\nТаблиця результатів:")
 print(table)
 
 # Зберегти таблицю результатів у файл CSV
-table.to_csv('results_table.csv', index=False, encoding='utf-8-sig')
+table.to_csv('XGBoost_results.csv', index=False, encoding='utf-8-sig')
