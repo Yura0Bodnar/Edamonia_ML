@@ -56,7 +56,7 @@ def generate_synthetic_data(n_rows):
 
 
 # Generate synthetic data
-synthetic_data = generate_synthetic_data(100000)
+synthetic_data = generate_synthetic_data(100)
 
 # To display the first 5 rows of the DataFrame
 print(synthetic_data.head())

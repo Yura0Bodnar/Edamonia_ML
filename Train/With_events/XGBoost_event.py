@@ -14,9 +14,9 @@ X_scaled, y, kf = preprocess_data_event(file_path)
 
 # Step 9: Define parameter grid for GridSearchCV
 param_grid = {
-    'n_estimators': [50, 60, 100],         # Кількість дерев
-    'learning_rate': [0.1, 0.15, 0.2],      # Темп навчання
-    'max_depth': [7, 8, 9]                  # Глибина дерева
+    'n_estimators': [50, 60, 100],         # Number of trees
+    'learning_rate': [0.1, 0.15, 0.2],      # Learning rate
+    'max_depth': [7, 8, 9]                  # Tree depth
 }
 
 xgb_model = XGBRegressor(objective='reg:squarederror', random_state=42)
@@ -35,9 +35,9 @@ selected_rows = sorted_results.iloc[[0, len(sorted_results) // 4, len(sorted_res
 
 # Create table for the article
 table = selected_rows[['param_n_estimators', 'param_learning_rate', 'param_max_depth', 'mean_test_score', 'std_test_score']]
-table.columns = ['Кількість дерев', 'Темп навчання', 'Глибина дерева', 'Середнє MSE (крос-валідація)', 'Стандартне відхилення MSE']
+table.columns = ['Number of trees', 'Learning rate', 'Tree depth', 'Mean MSE (cross-validation)', 'Std deviation MSE']
 
-# Compute R^2 for each selected model
+# Compute R² for each selected model
 r2_scores = []
 for _, row in selected_rows.iterrows():
     model = XGBRegressor(
@@ -50,15 +50,38 @@ for _, row in selected_rows.iterrows():
     r2 = cross_val_score(model, X_scaled, y, cv=kf, scoring=make_scorer(r2_score)).mean()
     r2_scores.append(r2)
 
-table = selected_rows[['param_n_estimators', 'param_learning_rate', 'param_max_depth', 'mean_test_score', 'std_test_score']].copy()
-table.columns = ['Кількість дерев', 'Темп навчання', 'Глибина дерева', 'Середнє MSE (крос-валідація)', 'Стандартне відхилення MSE']
-
-# Add R² column to the table
-table['R² (крос-валідація)'] = r2_scores
+table['R² (cross-validation)'] = r2_scores
 
 # Display table for the article
-print("\nТаблиця результатів:")
+print("\nResults table:")
 print(table)
 
-# Зберегти таблицю результатів у файл CSV
-table.to_csv('XGBoost_results.csv', index=False, encoding='utf-8-sig')
+# Save the results table to CSV
+table.to_csv('XGBoost_results_w_e.csv', index=False, encoding='utf-8-sig')
+
+# Step 15: Add predictions back to the original test set
+# Load the original dataset
+original_df = pd.read_csv(file_path)
+
+# Split into train/test (assuming X_test is provided)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Train the best model on the full training data
+best_model = grid_search.best_estimator_
+
+# Predict with the best estimator on the test set
+y_test_pred = best_model.predict(X_test)
+
+# Get test indices (assuming the order is preserved after preprocessing)
+test_indices = original_df.index[len(X_train):]
+
+# Add predictions to a copy of the original test set
+output_df = original_df.iloc[test_indices].copy()
+output_df['Predicted_Purchase_Quantity'] = y_test_pred
+
+# Step 16: Save predictions with original columns
+output_df.to_csv('XGBoost_predict_w_e.csv', index=False, encoding='utf-8-sig')
+
+# Display example predictions
+print("\nPredictions with original columns:")
+print(output_df.head())

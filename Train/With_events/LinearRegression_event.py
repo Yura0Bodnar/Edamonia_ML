@@ -35,7 +35,7 @@ cv_results_df = pd.DataFrame({
 })
 
 # Step 6: Save cross-validation results to CSV
-cv_results_df.to_csv('LinearRegression_CV_Results.csv', index=False, encoding='utf-8-sig')
+cv_results_df.to_csv('LinearRegression_CV_Results_w_e.csv', index=False, encoding='utf-8-sig')
 
 # Step 7: Train the model on the entire training set for final evaluation
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
@@ -57,10 +57,28 @@ test_results_df = pd.DataFrame({
 })
 
 # Step 11: Save test set results to CSV
-test_results_df.to_csv('LinearRegression_Test_Results.csv', index=False, encoding='utf-8-sig')
+test_results_df.to_csv('LinearRegression_Test_Results_w_e.csv', index=False, encoding='utf-8-sig')
 
 # Step 12: Display results
 print("\nCross-Validation Results:")
 print(cv_results_df)
 print("\nTest Set Metrics:")
 print(test_results_df)
+
+# Step 13: Add predictions back to the original test set
+# Load the original dataset
+original_df = pd.read_csv(file_path)
+
+# Get test indices (assuming the order is preserved after preprocessing)
+test_indices = original_df.index[len(X_train):]
+
+# Add predictions to a copy of the original test set
+output_df = original_df.iloc[test_indices].copy()
+output_df['Predicted_Purchase_Quantity'] = y_test_pred
+
+# Step 14: Save predictions with original columns
+output_df.to_csv('LinearRegression_predict_w_e.csv', index=False, encoding='utf-8-sig')
+
+# Display example predictions
+print("\nРезультат з оригінальними колонками і предиктами:")
+print(output_df.head())

@@ -1,3 +1,4 @@
+import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
@@ -5,7 +6,7 @@ import numpy as np
 from Train.preprocess_data import preprocess_data
 
 # Step 1: Load the dataset
-file_path = '../../Dataset/data_with_events.csv'
+file_path = '../../Dataset/synthetic_data.csv'
 
 X_scaled, y, kf = preprocess_data(file_path)
 
@@ -63,3 +64,21 @@ print("\nCross-Validation Results:")
 print(cv_results_df)
 print("\nTest Set Metrics:")
 print(test_results_df)
+
+# Step 15: Add predictions back to the original test set
+# Load the original dataset
+original_df = pd.read_csv(file_path)
+
+# Get test indices (assuming the order is preserved after preprocessing)
+test_indices = original_df.index[len(X_train):]
+
+# Add predictions to a copy of the original test set
+output_df = original_df.iloc[test_indices].copy()
+output_df['Predicted_Purchase_Quantity'] = y_test_pred
+
+# Step 16: Save predictions with original columns
+output_df.to_csv('LinearRegression_predict.csv', index=False, encoding='utf-8-sig')
+
+# Display example predictions
+print("\nРезультат з оригінальними колонками і предиктами:")
+print(output_df.head())

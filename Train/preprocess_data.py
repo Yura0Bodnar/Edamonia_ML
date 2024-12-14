@@ -104,7 +104,11 @@ def preprocess_data(file_path):
     df = pd.concat([df, encoded_df], axis=1)
 
     # Step 6: Drop the original categorical columns and 'Date'
-    df = df.drop(['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category', 'Event'], axis=1)
+    columns_to_drop = ['Day_of_Week', 'Season', 'Weather', 'Product', 'Date', 'Category']
+    if 'Event' in df.columns:
+        columns_to_drop.append('Event')
+
+    df = df.drop(columns=columns_to_drop)
 
     # Step 7: Split features and target
     X = df.drop(['Purchase_Quantity'], axis=1)  # Features
@@ -114,7 +118,7 @@ def preprocess_data(file_path):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Step 10: Set up cross-validation and GridSearchCV
+    # Step 9: Set up cross-validation
     kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 5-fold cross-validation
 
     return X_scaled, y, kf

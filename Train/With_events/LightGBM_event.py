@@ -72,7 +72,7 @@ for _, row in selected_rows.iterrows():
 table['R² (крос-валідація)'] = r2_scores
 
 # Step 11: Save table to CSV
-table.to_csv('LightGBM_results.csv', index=False, encoding='utf-8-sig')
+table.to_csv('LightGBM_results_w_e.csv', index=False, encoding='utf-8-sig')
 
 # Step 12: Display table
 print("\nТаблиця результатів:")
@@ -97,3 +97,16 @@ print(f"Mean Squared Error (MSE): {test_mse:.4f}")
 print(f"Root Mean Squared Error (RMSE): {test_rmse:.4f}")
 print(f"Mean Absolute Error (MAE): {test_mae:.4f}")
 print(f"R-squared (R²): {test_r2:.4f}")
+
+# Step 15: Add predictions back to the original test set
+original_df = pd.read_csv(file_path)
+test_indices = original_df.index[len(X_train):]  # Assuming the order is preserved
+output_df = original_df.iloc[test_indices].copy()
+output_df['Predicted_Purchase_Quantity'] = y_test_pred
+
+# Step 16: Save predictions with original columns
+output_df.to_csv('LightGBM_predict_w_e.csv', index=False, encoding='utf-8-sig')
+
+# Display example predictions
+print("\nРезультат з оригінальними колонками і предиктами:")
+print(output_df.head())

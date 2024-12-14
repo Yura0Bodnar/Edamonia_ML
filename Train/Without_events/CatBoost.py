@@ -1,12 +1,15 @@
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from catboost import CatBoostRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
+import pandas as pd
 import numpy as np
 from Train.preprocess_data import preprocess_data
 
 # Step 1: Load the dataset
-file_path = '../../Dataset/data_with_events.csv'
+file_path = '../../Dataset/synthetic_data.csv'
+original_df = pd.read_csv(file_path)
 
+# Preprocess data
 X_scaled, y, kf = preprocess_data(file_path)
 
 # Step 2: Define parameter grid for GridSearchCV
@@ -91,3 +94,15 @@ print(f"Mean Squared Error (MSE): {test_mse:.4f}")
 print(f"Root Mean Squared Error (RMSE): {test_rmse:.4f}")
 print(f"Mean Absolute Error (MAE): {test_mae:.4f}")
 print(f"R-squared (R²): {test_r2:.4f}")
+
+# Step 15: Add predictions back to the original test set
+test_indices = original_df.index[len(X_train):]  # Assuming the order is preserved
+output_df = original_df.iloc[test_indices].copy()
+output_df['Predicted_Purchase_Quantity'] = y_test_pred
+
+# Step 16: Save predictions with original columns
+output_df.to_csv('CatBoost_predict.csv', index=False, encoding='utf-8-sig')
+
+# Display example predictions
+print("\nРезультат з оригінальними колонками і предиктами:")
+print(output_df.head())
