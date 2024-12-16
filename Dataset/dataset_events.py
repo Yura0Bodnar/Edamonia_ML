@@ -8,7 +8,7 @@ products = ['Milk', 'Eggs', 'Chicken', 'Tomatoes', 'Apples', 'Salmon', 'Cheese',
 seasons = ['Winter', 'Spring', 'Summer', 'Autumn']
 days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 weather_conditions = ['Sunny', 'Rainy', 'Snowy', 'Cloudy', 'Stormy', 'Hot', 'Cold']
-events = ['None', 'Holiday Special', 'Birthdays', 'Corporate Event', 'Special Promotion', 'Seasonal Event']
+events = ['None', 'Birthdays', 'Corporate Event', 'Special Promotion', 'Seasonal Event']
 
 
 # Generate synthetic data
@@ -61,7 +61,7 @@ def generate_synthetic_data(n_rows):
 
 
 # Generate synthetic data
-synthetic_data = generate_synthetic_data(100)
+synthetic_data = generate_synthetic_data(100000)
 
 synthetic_data = synthetic_data.sort_values(by='Date', ascending=False)
 

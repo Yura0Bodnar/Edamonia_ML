@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta
 
-events = ['None', 'Holiday Special', 'Birthdays', 'Corporate Event', 'Special Promotion', 'Seasonal Event']
+events = ['None', 'Birthdays', 'Corporate Event', 'Special Promotion', 'Seasonal Event']
 
 # Список свят (без року)
 holidays = [
@@ -159,10 +159,10 @@ product_category = {
     'Milk': 'Dairy',
     'Eggs': 'Dairy',
     'Chicken': 'Meat',
-    'Beef': 'Meat',
+    'Pork': 'Meat',
     'Tomatoes': 'Vegetables',
     'Apples': 'Fruits',
-    'Fish': 'Seafood',
+    'Salmon': 'Seafood',
     'Cheese': 'Dairy',
     'Lettuce': 'Vegetables',
     'Potatoes': 'Vegetables'
@@ -176,10 +176,10 @@ shelf_life_dict = {
     'Tomatoes': 10,  # tomatoes last about 10 days
     'Apples': 30,    # apples can last for a month
     'Salmon': 3,       # fresh fish lasts about 3 days
-    'Cheese': 90,    # hard cheese can last about 90 days
+    'Cheese': 9,    # hard cheese can last about 90 days
     'Lettuce': 5,    # lettuce lasts around 5 days
     'Pork': 7,       # beef can last up to a week
-    'Potatoes': 90   # potatoes can be stored for several months
+    'Potatoes': 9   # potatoes can be stored for several months
 }
 
 
@@ -193,7 +193,7 @@ def get_shelf_life(product):
 
 
 # Weights: 40% for 'None', 60% distributed across other events
-event_weights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12]
+event_weights = [0.4, 0.15, 0.15, 0.15, 0.15]
 
 
 # Choose an event based on the specified probabilities
@@ -335,10 +335,10 @@ def num_customers_events(current_date, season, weather):
 
 # New logic to determine purchase quantity
 def determine_quantity(num_customers, stocks, season, product, event):
-    base_quantity = 50  # Base quantity for all products
+    base_quantity = 30  # Base quantity for all products
 
     # Increase quantity if many customers
-    if num_customers > 6000:
+    if num_customers > 6500:
         base_quantity += random.randint(10, 15)  # More customers, larger purchase
 
     # Increase quantity if low stock
@@ -371,6 +371,6 @@ def determine_quantity(num_customers, stocks, season, product, event):
             base_quantity += 10
 
     if event is not None:
-        base_quantity += 10
+        base_quantity += random.randint(9, 13)
 
     return base_quantity
