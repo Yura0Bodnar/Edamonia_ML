@@ -59,3 +59,6 @@ print(table)
 
 # Зберегти таблицю результатів у файл CSV
 table.to_csv('XGBoost_results.csv', index=False, encoding='utf-8-sig')
+
+xgboost_mse_value = table['Середнє MSE (крос-валідація)'].min()
+print(f"Test MSE: {xgboost_mse_value}")

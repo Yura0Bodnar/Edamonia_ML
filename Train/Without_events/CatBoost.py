@@ -1,8 +1,9 @@
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from catboost import CatBoostRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
 import numpy as np
 from Train.preprocess_data import preprocess_data
+import pandas as pd
 
 # Step 1: Load the dataset
 file_path = '../../Dataset/data_with_events.csv'
@@ -91,3 +92,6 @@ print(f"Mean Squared Error (MSE): {test_mse:.4f}")
 print(f"Root Mean Squared Error (RMSE): {test_rmse:.4f}")
 print(f"Mean Absolute Error (MAE): {test_mae:.4f}")
 print(f"R-squared (R²): {test_r2:.4f}")
+
+catboost_mse_value = table['Середнє MSE (крос-валідація)'].min()
+print(f"Test MSE: {catboost_mse_value}")

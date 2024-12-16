@@ -3,6 +3,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
 import numpy as np
 from Train.preprocess_data import preprocess_data
+import pandas as pd
 
 # Step 1: Load the dataset
 file_path = '../../Dataset/data_with_events.csv'
@@ -63,3 +64,6 @@ print("\nCross-Validation Results:")
 print(cv_results_df)
 print("\nTest Set Metrics:")
 print(test_results_df)
+
+linear_mse_value = test_results_df.loc[test_results_df['Metric'] == 'MSE', 'Value'].values[0]
+print(f"Test MSE: {linear_mse_value}")

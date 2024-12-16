@@ -1,8 +1,8 @@
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
-import numpy as np
+from sklearn.metrics import r2_score, make_scorer
 from Train.preprocess_data import preprocess_data
+import pandas as pd
 
 # Step 1: Load the dataset
 file_path = '../../Dataset/data_with_events.csv'
@@ -64,3 +64,6 @@ table.to_csv('DecisionTree_results.csv', index=False, encoding='utf-8-sig')
 # Step 10: Display table
 print("\nТаблиця результатів:")
 print(table)
+
+tree_mse_value = table['Середнє MSE (крос-валідація)'].min()
+print(f"Test MSE: {tree_mse_value}")
